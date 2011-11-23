@@ -1,0 +1,208 @@
+<html>
+<head>
+<style type="text/css">
+	h4 {
+		margin: 0px;
+		padding: 0px;
+	}
+	#formContainer {
+		position: absolute; 
+		height: 230px;
+		width: 190px;
+		padding: 5px;
+		background-color: #eee;
+	}
+	#formContainer input[type="text"] {
+		width: 40px;
+	}
+	#formContainer table tr > td {
+		width: 100px;
+	}
+	#container {
+		border: solid 1px; 
+		background-color: #eee;
+		position: absolute;
+		top: 10px;
+		left: 220px;
+	}
+	.stream {
+		background-color: #ff0000;
+		border: solid 1px;
+	}
+</style>
+</head>
+<body>
+	
+	<div id="formContainer">
+		<h4>container</h4>
+		<table>
+			<tr>
+				<td>width</td>
+				<td><input type="text" id="containerWidth" name="containerWidth" value="200" /></td>
+			</tr>
+			<tr>
+				<td>height</td>
+				<td><input type="text" id="containerHeight" name="containerHeight" value="200" /></td>
+			</tr>
+		</table>
+		<h4>streams</h4>
+		<table>
+			<tr>
+				<td>#streams</td>
+				<td><input type="text" id="nstreams" name="nstreams" value="8" /></td>
+			</tr>
+			<tr>
+				<td>start width</td>
+				<td><input type="text" id="swidth" name="swidth" value="50" /></td>
+			</tr>
+			<tr>
+				<td>start height</td>
+				<td><input type="text" id="sheight" name="sheight" value="50" /></td>
+			</tr>
+		</table>
+		<input id="btnShowOne" type="submit" value="show one, as is" />
+		<input id="btnLayout" type="submit" value="layout!" />
+	</div>
+	
+
+	<div id="container"></div>
+
+
+	<script>
+		var floor = Math.floor;
+		// inputs
+		var _containerWidth = document.getElementById("containerWidth");
+		var _containerHeight = document.getElementById("containerHeight");
+		var _nstreams = document.getElementById("nstreams");
+		var _swidth = document.getElementById("swidth");
+		var _sheight = document.getElementById("sheight");
+		
+		// container element
+		var eleContainer = document.getElementById("container");
+		
+		
+		var container = {
+			width: 0,
+			height: 0
+		};
+		var stream = {
+			count: 1,
+			width: 0,
+			height: 0
+		};
+		
+		
+		var commonLayout = function(){
+			// get input values
+			container.width = Math.max(1, parseFloat(_containerWidth.value));
+			container.height = Math.max(1, parseFloat(_containerHeight.value));
+			stream.count = Math.max(0, parseFloat(_nstreams.value));
+			stream.width = Math.max(1, parseFloat(_swidth.value));
+			stream.height = Math.max(1, parseFloat(_sheight.value));
+			
+			// clear container
+			eleContainer.innerHTML = "";
+			eleContainer.style.width = containerWidth.value;
+			eleContainer.style.height = containerHeight.value;
+		};
+		
+		
+		btnShowOne.onclick = function(){
+			commonLayout();
+			
+			var _aStream = document.createElement("div");
+			eleContainer.appendChild(_aStream);
+			
+			_aStream.style.width = _swidth.value;
+			_aStream.style.height = _sheight.value;
+			_aStream.setAttribute("class", "stream");
+			_aStream.style.position = "absolute";
+			
+			if (stream.width < container.width)
+				_aStream.style.left = ((container.width - stream.width) * .4) + "px";
+			if (stream.height < container.height)
+				_aStream.style.top = ((container.height - stream.height) * .2) + "px";
+			
+		};
+		
+		btnLayout.onclick = function(){
+			commonLayout();
+			
+			// m for to max out rows (max height of stream per grid)
+			var calculateMultiplier = function(__container, __stream){
+				// get best solution when grid extends to right side of container
+				var rowSolution;
+				var k = 1;
+				while (!rowSolution) {
+					var numRows = k * floor(( k * __container.width * __stream.height )/( __container.height * __stream.width ));
+					if (__stream.count <= numRows) {
+						rowSolution = __container.height / (__stream.height * k);
+					}
+					++k;
+				}
+				return rowSolution;
+			};
+	
+			var invertContainer = {
+				width: container.height,
+				height: container.width
+			};
+			var invertStream = {
+				count: stream.count,
+				width: stream.height,
+				height: stream.width
+			};
+	
+			var rowSolution = calculateMultiplier(container, stream);
+			var colSolution = calculateMultiplier(invertContainer, invertStream);
+	
+			var m = (colSolution > rowSolution) ? colSolution : rowSolution;
+			
+			var streamDim = {
+				width: Math.floor(stream.width * m),
+				height: Math.floor(stream.height * m)
+			};
+			var grid = {
+				cols: Math.floor(container.width / streamDim.width),
+				rows: Math.floor(container.height / streamDim.height)
+			};
+	
+			// create streams divs
+			var streams = [];
+			for (var i=0; i<stream.count; ++i){
+				streams[i] = document.createElement("div");
+				eleContainer.appendChild(streams[i]);
+				streams[i].style.width = streamDim.width;
+				streams[i].style.height = streamDim.height;
+				streams[i].setAttribute("class", "stream");
+				streams[i].style.position = "absolute";
+				// primitive layout strategy
+				streams[i].style.top = (Math.floor(i / grid.cols)) * (streamDim.height) + "px";
+				streams[i].style.left = (i % grid.cols) * (streamDim.width) + "px";
+			}
+			
+			
+			
+		};
+		
+		
+	</script>
+	
+	
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
